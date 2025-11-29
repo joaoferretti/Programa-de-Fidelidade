@@ -313,6 +313,16 @@ Resultado esperado:
 
 ---
 
+10. ⚠️ Limitações e próximos passos
+
+Ainda não há persistência em banco → apenas sessão/CLI.
+
+Pontos poderiam expirar por data real, não por “evento simulado”.
+
+Faltam mais campanhas e regras de tier.
+
+Poderia existir API REST.
+
 # 11. 👤 Créditos
 
 **Desenvolvido por:**
