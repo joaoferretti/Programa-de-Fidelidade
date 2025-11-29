@@ -1,0 +1,14 @@
+{
+  "name": "joaopedro/fidelidade-php",
+  "require": {
+    "php": ">=8.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
+  },
+  "autoload": {
+      "psr-4": {
+        "Fidelidade\\": ""
+      }
+  }
+}
