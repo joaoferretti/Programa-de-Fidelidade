@@ -26,13 +26,10 @@ class TierUpdateObserver implements ObserverInterface
 
             $oldTier = $program->getTier();
 
-            // Atualiza LoyaltyProgram
             $program->changeTier($newTier);
 
-            // Atualiza sessão
             $_SESSION['state']['tier'] = $newTier;
 
-            // Dispara evento público
             $program->notify('auto_tier_update', [
                 'from' => $oldTier,
                 'to'  => $newTier

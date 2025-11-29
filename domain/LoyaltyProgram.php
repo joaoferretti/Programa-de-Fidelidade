@@ -70,10 +70,6 @@ class LoyaltyProgram extends Subject
         $this->points = max(0, $this->points - $pts);
     }
 
-
-    /* ============================================================
-       PRÉ-VISUALIZAÇÃO DE PONTOS (SEM APLICAR)
-    ============================================================ */
     public function previewPoints(float $amount): int
     {
         $base = $this->strategy->accumulate($amount);
@@ -87,10 +83,6 @@ class LoyaltyProgram extends Subject
         return (int) floor($final);
     }
 
-
-    /* ============================================================
-       REGRAS DE TIER (AGORA INTERNAS)
-    ============================================================ */
     private function calculateTier(int $totalPoints): string
     {
         if ($totalPoints >= 5000) return 'platinum';
@@ -98,50 +90,29 @@ class LoyaltyProgram extends Subject
         return 'bronze';
     }
 
-
-    /* ============================================================
-       APLICAÇÃO DE COMPRA (PROMOVE ANTES DE ACUMULAR)
-    ============================================================ */
     public function purchase(float $amount): int
     {
-        // 1. prever pontos que seriam gerados
         $potentialPoints = $this->previewPoints($amount);
-
-        // 2. calcular pontos totais após a compra teórica
         $futureTotal = $this->points + $potentialPoints;
-
-        // 3. descobrir tier futuro
         $newTier = $this->calculateTier($futureTotal);
-
-        // 4. se houver mudança, aplicar ANTES de acumular
         if ($newTier !== $this->tier) {
             $oldTier = $this->tier;
-
-            // muda internamente (isso muda também a strategy)
             $this->changeTier($newTier);
-
-            // dispara evento
             $this->notify('auto_tier_update', [
                 'from' => $oldTier,
                 'to' => $newTier,
                 'program' => $this
             ]);
         }
-
-        // 5. finalmente acumula usando o novo tier
         return $this->accumulate($amount);
     }
 
 
-    /* ============================================================
-       ACUMULAR PONTOS (AGORA COM tier_at_purchase)
-    ============================================================ */
+    // acumular pontos
     public function accumulate(float $amount): int
     {
-        // valor base
         $basePoints = $this->strategy->accumulate($amount);
 
-        // aplica decoradores
         $finalPoints = array_reduce(
             $this->decorators,
             fn($carry, PointsDecoratorInterface $decor) => $decor->apply($carry),
@@ -150,10 +121,8 @@ class LoyaltyProgram extends Subject
 
         $finalPoints = (int) floor($finalPoints);
 
-        // incrementa
         $this->increasePoints($finalPoints);
 
-        // envia tier_at_purchase para o histórico
         $this->notify('points_accumulated', [
             'points' => $finalPoints,
             'base'   => $basePoints,
@@ -166,9 +135,7 @@ class LoyaltyProgram extends Subject
     }
 
 
-    /* ============================================================
-       RESGATE
-    ============================================================ */
+    // Resgate
     public function redeem(int $points): int
     {
         if ($points <= 0) {
@@ -196,9 +163,7 @@ class LoyaltyProgram extends Subject
     }
 
 
-    /* ============================================================
-       MUDAR TIER (ATUALIZA STRATEGY AUTOMATICAMENTE)
-    ============================================================ */
+    // Muda tier no strategy
     public function changeTier(string $newTier): void
     {
         $this->tier = $newTier;

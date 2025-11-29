@@ -7,9 +7,6 @@ use Fidelidade\Domain\LoyaltyProgram;
 use Fidelidade\Decorators\BonusMultiplierDecorator;
 use Fidelidade\Observers\ObserverInterface;
 
-// ------------------------------------------------------------
-// Inicializa estado na sessão (apenas dados simples)
-// ------------------------------------------------------------
 if (!isset($_SESSION['state'])) {
     $_SESSION['state'] = [
         "tier" => "bronze",
@@ -18,24 +15,17 @@ if (!isset($_SESSION['state'])) {
     ];
 }
 
-// ------------------------------------------------------------
-// Sempre recria o LoyaltyProgram a cada request
-// ------------------------------------------------------------
 $strategy = StrategyFactory::createAccumulation('tier', [
     'tier' => $_SESSION['state']['tier']
 ]);
 
 $program = new LoyaltyProgram($strategy, $_SESSION['state']['tier']);
 
-// Aplica pontos já acumulados anteriormente:
 $reflection = new ReflectionClass($program);
 $prop = $reflection->getProperty('points');
 $prop->setAccessible(true);
 $prop->setValue($program, $_SESSION['state']['points']);
 
-// ------------------------------------------------------------
-// Observer que grava eventos no histórico da sessão
-// ------------------------------------------------------------
 class SessionObserver implements ObserverInterface {
 
     public function notify(string $event, array $payload): void {
@@ -49,7 +39,7 @@ class SessionObserver implements ObserverInterface {
 
     private function cleanPayload(array $payload): array
     {
-        unset($payload['program']); // remove objeto LoyaltyProgram completamente
+        unset($payload['program']);
         return $payload;
     }
 }
@@ -60,14 +50,9 @@ $program->attach(new \Fidelidade\Observers\TierUpdateObserver());
 $observer = new SessionObserver();
 $program->attach($observer);
 
-// ------------------------------------------------------------
-// Processa compra (POST)
-// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // ------------------------------------------------------------
-    // RESETAR PONTOS E HISTÓRICO
-    // ------------------------------------------------------------
+    // Resetar programa
     if (isset($_POST['resetar'])) {
 
         $_SESSION['state'] = [
@@ -77,8 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         unset($_SESSION['last_result']);
-
-        // Redireciona para evitar re-envio do formulário
         header("Location: index.php");
         exit;
     }
@@ -86,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $valor = floatval($_POST['valor']);
     $bonus = intval($_POST['bonus']);
 
-    // Decorator (se houver bônus)
+    // Decorator
     $program->clearDecorators();
 
     if ($bonus > 0) {
@@ -96,11 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Compra
     $gerados = $program->purchase($valor);
 
-    // Atualiza pontos na sessão
     $_SESSION['state']['points'] = $program->getPoints();
     $_SESSION['state']['tier'] = $program->getTier();
 
-    // Salva último resultado
     $_SESSION['last_result'] = [
         "valor" => $valor,
         "pontos" => $gerados,
@@ -108,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 }
 
-// Históricos e estado atual
 $state = $_SESSION['state'];
 $last = $_SESSION['last_result'] ?? null;
 ?>

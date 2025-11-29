@@ -3,12 +3,7 @@ namespace Fidelidade\Strategies;
 
 class BasicRedeemStrategy implements RedeemStrategyInterface
 {
-    /**
-     * Convenção simples: cada 100 pontos = 1 unidade monetária (ex: R$1).
-     *
-     * @param int $points
-     * @return int
-     */
+    // 1 real para cada 100 pontos
     public function redeem(int $points): int
     {
         return intdiv($points, 100);

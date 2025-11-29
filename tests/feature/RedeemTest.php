@@ -14,12 +14,10 @@ class RedeemTest extends TestCase
         $program = new LoyaltyProgram($acc);
         $program->setRedeemStrategy(new BasicRedeemStrategy());
 
-        // acumula R$ 200 -> tier bronze 1x => 200 pontos
         $points = $program->accumulate(200.0);
         $this->assertGreaterThanOrEqual(200, $points);
         $this->assertEquals($program->getPoints(), $points);
 
-        // resgatar 100 pontos -> espera R$1 (por convenção 100 pts = 1)
         $value = $program->redeem(100);
         $this->assertEquals(1, $value);
         $this->assertEquals($points - 100, $program->getPoints());
@@ -31,7 +29,7 @@ class RedeemTest extends TestCase
         $program = new LoyaltyProgram($black);
         $program->setRedeemStrategy(new BasicRedeemStrategy());
 
-        $points = $program->accumulate(100.0); // 100 * 5 = 500
+        $points = $program->accumulate(100.0);
         $this->assertEquals(500, $points);
     }
 }
